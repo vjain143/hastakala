@@ -1,7 +1,5 @@
 # Trino Production Readiness Runbook ✅
 
-Generated: 2025-09-02 20:07:14
-
 This runbook is a **checklist** to verify that a production Trino cluster is reliable, secure, and maintainable.  
 Use it before go-live and as a recurring health audit.
 
