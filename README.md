@@ -1,2 +1,2 @@
 # hastakala
-handmade creative work,
+Handmade creative work
