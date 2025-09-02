@@ -33,10 +33,43 @@ def load_cluster_files(config_dir: str):
     return sorted(paths)
 
 def load_cluster_config(path: str):
-    with open(path, "r", encoding="utf-8") as f:
-        if path.endswith((".yaml", ".yml")) and HAS_YAML:
-            return yaml.safe_load(f)
-        return json.load(f)
+    """Load one config file and return a list of cluster dicts.
+
+    Supports:
+    - YAML single-doc (dict) or list
+    - YAML multi-doc (--- separated)
+    - JSON dict or list
+    """
+    clusters_in_file = []
+
+    if path.endswith((".yaml", ".yml")):
+        if not HAS_YAML:
+            raise RuntimeError(
+                "PyYAML is not installed but a YAML file was provided. Install 'PyYAML'."
+            )
+        with open(path, "r", encoding="utf-8") as f:
+            # Load all YAML documents; each doc can be a dict or a list of dicts
+            docs = list(yaml.safe_load_all(f))
+        for doc in docs:
+            if not doc:
+                continue
+            if isinstance(doc, list):
+                for item in doc:
+                    if isinstance(item, dict):
+                        clusters_in_file.append(item)
+            elif isinstance(doc, dict):
+                clusters_in_file.append(doc)
+    else:
+        with open(path, "r", encoding="utf-8") as f:
+            doc = json.load(f)
+        if isinstance(doc, list):
+            for item in doc:
+                if isinstance(item, dict):
+                    clusters_in_file.append(item)
+        elif isinstance(doc, dict):
+            clusters_in_file.append(doc)
+
+    return clusters_in_file
 
 cluster_files = load_cluster_files(CONFIG_DIR)
 if not cluster_files:
@@ -46,7 +79,20 @@ if not cluster_files:
     )
     st.stop()
 
-clusters = [load_cluster_config(p) for p in cluster_files]
+clusters = []
+for p in cluster_files:
+    try:
+        clusters.extend(load_cluster_config(p))
+    except Exception as e:
+        st.error(f"Failed to load config '{p}': {e}")
+
+if not clusters:
+    st.warning(
+        f"No cluster entries found in `{CONFIG_DIR}` config files. "
+        "Add YAML/JSON cluster definitions and reload."
+    )
+    st.stop()
+
 # Normalize & validate
 for c in clusters:
     c.setdefault("name", f"{c.get('host')} ({c.get('dialect')})")

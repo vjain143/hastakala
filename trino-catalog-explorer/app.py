@@ -236,7 +236,6 @@ if run_btn:
         st.warning("No data found. Check your connections or filters.")
     else:
         with _LOCK:
-            global _LAST_DF
             _LAST_DF = df
 
         st.success("Done!")

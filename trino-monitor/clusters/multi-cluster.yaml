@@ -1,0 +1,25 @@
+# Example multi-cluster configuration
+# You can list multiple clusters in a single YAML file.
+# Each item represents one event-listener database where `trino_queries` is stored.
+
+- name: "Prod MySQL Eventstore"
+  dialect: "mysql"           # "mysql" or "postgres"
+  host: "mysql.example.internal"
+  port: 3306
+  user: "trino_monitor"
+  password: "REPLACE_ME"
+  database: "trino_events_db"
+  schema: "trino_events"     # MySQL ignores schema; keep for consistency
+  table: "trino_queries"
+
+- name: "Staging Postgres Eventstore"
+  dialect: "postgres"        # "mysql" or "postgres"
+  host: "10.0.0.12"
+  port: 5432
+  user: "trino_monitor"
+  password: "REPLACE_ME"
+  database: "analytics"
+  schema: "trino_events"
+  table: "trino_queries"
+
+
