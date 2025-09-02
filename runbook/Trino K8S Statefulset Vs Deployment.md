@@ -28,4 +28,4 @@ StatefulSet
 Trino = query engine = compute elasticity ⇒ Deployment is the natural fit.
 StatefulSet is an optimization for special workloads that push beyond memory into heavy spill.
 
-![Trino K8S workers decision tree](./trino_k8s_workers_decision_tree.png)
+![Trino K8S workers decision tree](trino_k8s_workers_decision_tree.png)
