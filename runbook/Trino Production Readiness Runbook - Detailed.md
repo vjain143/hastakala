@@ -1,7 +1,5 @@
 # Trino Production Readiness Runbook Detailed ✅
 
-Generated: 2025-09-02 20:13:41
-
 This runbook is a **detailed checklist** to ensure a production Trino cluster is reliable, secure, and maintainable.  
 Each item includes configuration examples, commands, and verification steps.
 
@@ -199,12 +197,5 @@ Each item includes configuration examples, commands, and verification steps.
 - [ ] Upgrade + rollback test in staging.  
 - [ ] DR restore test: restore Hive Metastore DB from backup into staging.  
 - [ ] Secret & TLS cert rotation.
-
----
-
-## Sign-off
-
-Team lead: _____________________  
-Date: _____________________  
 
 ---
