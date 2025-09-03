@@ -29,3 +29,39 @@ Trino = query engine = compute elasticity ⇒ Deployment is the natural fit.
 StatefulSet is an optimization for special workloads that push beyond memory into heavy spill.
 
 ![Trino K8S workers decision tree](./trino_k8s_workers_decision_tree.png)
+
+# Flow 
+flowchart TD
+    %% Root
+    A["Do you need persistent NVMe spill/cache<br>or stable pod identities?"]
+
+    %% Branches
+    A -->|Yes| B["StatefulSet"]
+
+    A -->|No| C["Deployment"]
+
+
+    %% StatefulSet branch
+    B --> B1{"Do long queries regularly spill<br>and cache re-warm is expensive?"}
+
+    B1 -->|Yes| B2["✅ Stick with StatefulSet<br>(local NVMe PVs)"]
+
+    B1 -->|No| B3["➡️ Consider Deployment<br>for simpler elasticity"]
+
+
+    %% Deployment branch
+    C --> C1{"Is compute elasticity and<br>fast scale-up/down the priority?"}
+
+    C1 -->|Yes| C2["✅ Deployment is the natural fit"]
+
+    C1 -->|No| C3["➡️ Reassess storage needs<br>StatefulSet if spill dominates"]
+
+
+    %% Styling
+    style A fill:#ffffff,stroke:#333,stroke-width:1px
+    style B fill:#e0e7ff,stroke:#1d4ed8,stroke-width:1px
+    style C fill:#e0f7ff,stroke:#0369a1,stroke-width:1px
+    style B2 fill:#d1fae5,stroke:#047857,stroke-width:1.5px
+    style C2 fill:#d1fae5,stroke:#047857,stroke-width:1.5px
+    style B3 fill:#fef9c3,stroke:#854d0e,stroke-width:1.2px
+    style C3 fill:#fef9c3,stroke:#854d0e,stroke-width:1.2px
