@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trino
+  namespace: lakehouse
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: trino
+  template:
+    metadata:
+      labels:
+        app: trino
+    spec:
+      containers:
+        - name: trino
+          image: trinodb/trino:481
+          ports:
+            - containerPort: 8080
+              name: http
+          volumeMounts:
+            - name: etc
+              mountPath: /etc/trino
+            - name: data
+              mountPath: /data/trino
+      volumes:
+        - name: etc
+          configMap:
+            name: trino-config
+            items:
+              - key: node.properties
+                path: node.properties
+              - key: jvm.config
+                path: jvm.config
+              - key: config.properties
+                path: config.properties
+              - key: catalog-iceberg.properties
+                path: catalog/iceberg.properties
+        - name: data
+          emptyDir: {}
+
+

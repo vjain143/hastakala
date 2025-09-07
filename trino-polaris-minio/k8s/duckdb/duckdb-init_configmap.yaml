@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: duckdb-init
+  namespace: lakehouse
+data:
+  init.sql: |
+    -- Optional helper: install and load extensions
+    INSTALL httpfs; LOAD httpfs;
+    INSTALL iceberg; LOAD iceberg;
+    -- Configure MinIO (S3-compatible)
+    SET s3_endpoint='minio.lakehouse.svc.cluster.local:9000';
+    SET s3_url_style='path';
+    SET s3_use_ssl=false;
+    SET s3_region='local';
+    -- For demo only (static keys). For production, prefer vended credentials via your catalog.
+    SET s3_access_key_id=getenv('S3_ACCESS_KEY_ID');
+    SET s3_secret_access_key=getenv('S3_SECRET_ACCESS_KEY');
+    -- Example: list objects
+    SELECT * FROM glob('s3://lake-bucket/**');
+
+

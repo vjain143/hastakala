@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: polaris-app-config
+  namespace: lakehouse
+data:
+  application.properties: |
+    # Polaris server config (Quarkus)
+    quarkus.http.port=8181
+    quarkus.management.enabled=true
+    quarkus.management.port=8182
+
+    # Persistence: Postgres
+    polaris.persistence.type=relational-jdbc
+    quarkus.datasource.jdbc.url=jdbc:postgresql://postgres.lakehouse.svc.cluster.local:5432/POLARIS
+
+    # Features
+    polaris.features."SUPPORTED_CATALOG_STORAGE_TYPES"=S3
+
+    # Use a stable symmetric key so tokens survive restarts
+    polaris.authentication.token-broker.type=symmetric-key
+    polaris.authentication.token-broker.symmetric-key.file=/keys/symmetric.key
+
+

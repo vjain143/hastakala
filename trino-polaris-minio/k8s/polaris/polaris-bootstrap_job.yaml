@@ -1,0 +1,58 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: polaris-bootstrap
+  namespace: lakehouse
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: bootstrap
+          image: alpine:3.20
+          env:
+            - name: CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: polaris-secrets
+                  key: CLIENT_ID
+            - name: CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: polaris-secrets
+                  key: CLIENT_SECRET
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eux
+              apk add --no-cache curl jq
+              # Wait for Polaris readiness endpoint
+              until curl -sf http://polaris.lakehouse.svc.cluster.local:8182/q/health/ready >/dev/null; do echo "waiting for polaris..."; sleep 3; done
+              # Get OAuth token for root principal
+              POLARIS_TOKEN=$(curl -s http://polaris.lakehouse.svc.cluster.local:8181/api/catalog/v1/oauth/tokens \
+                --user "$CLIENT_ID:$CLIENT_SECRET" \
+                -d 'grant_type=client_credentials' \
+                -d 'scope=PRINCIPAL_ROLE:ALL' | jq -r .access_token)
+              echo "Got token: ${POLARIS_TOKEN:0:8}..."
+              # Create catalog backed by MinIO (idempotent)
+              cat > /tmp/catalog.json <<'JSON'
+              {
+                "name": "quickstart_catalog",
+                "storageConfigInfo": {
+                  "storageType": "S3",
+                  "endpoint": "http://minio.lakehouse.svc.cluster.local:9000",
+                  "endpointInternal": "http://minio.lakehouse.svc.cluster.local:9000",
+                  "pathStyleAccess": true,
+                  "allowedLocations": ["s3://lake-bucket"]
+                }
+              }
+              JSON
+              curl -sS -H "Authorization: Bearer $POLARIS_TOKEN" -H 'Content-Type: application/json' \
+                -X POST http://polaris.lakehouse.svc.cluster.local:8181/api/management/v1/catalogs \
+                -d @/tmp/catalog.json || true
+              # Show catalog
+              curl -sS -H "Authorization: Bearer $POLARIS_TOKEN" \
+                http://polaris.lakehouse.svc.cluster.local:8181/api/management/v1/catalogs/quickstart_catalog | jq . || true
+
+

@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: polaris
+  namespace: lakehouse
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: polaris
+  template:
+    metadata:
+      labels:
+        app: polaris
+    spec:
+      containers:
+        - name: polaris
+          image: apache/polaris:1.0.1-incubating
+          env:
+            # Provide DB creds via env (Quarkus reads these)
+            - name: QUARKUS_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: polaris-postgres
+                  key: POSTGRES_USER
+            - name: QUARKUS_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: polaris-postgres
+                  key: POSTGRES_PASSWORD
+            # Root principal credentials for bootstrap
+            - name: CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: polaris-secrets
+                  key: CLIENT_ID
+            - name: CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: polaris-secrets
+                  key: CLIENT_SECRET
+            # Polaris will use these to vend S3 creds (MinIO compatible)
+            - name: "polaris.storage.aws.access-key"
+              valueFrom:
+                secretKeyRef:
+                  name: polaris-secrets
+                  key: AWS_ACCESS_KEY
+            - name: "polaris.storage.aws.secret-key"
+              valueFrom:
+                secretKeyRef:
+                  name: polaris-secrets
+                  key: AWS_SECRET_KEY
+            # Make bootstrap credentials deterministic (overrides random)
+            - name: JAVA_OPTS_APPEND
+              value: "-Dpolaris.bootstrap.credentials=POLARIS,root,s3cr3t"
+          ports:
+            - containerPort: 8181
+              name: http
+            - containerPort: 8182
+              name: metrics
+          volumeMounts:
+            - name: app-config
+              mountPath: /deployment/config
+            - name: keyfile
+              mountPath: /keys
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+              port: 8182
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: app-config
+          configMap:
+            name: polaris-app-config
+            items:
+              - key: application.properties
+                path: application.properties
+        - name: keyfile
+          secret:
+            secretName: polaris-secrets
+            items:
+              - key: SYMMETRIC_KEY
+                path: symmetric.key
+
+

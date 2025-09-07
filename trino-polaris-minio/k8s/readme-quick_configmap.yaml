@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: readme-quick
+  namespace: lakehouse
+data:
+  README: |
+    # Quick start
+    kubectl apply -R -f k8s/
+
+    # Port-forward (in separate terminals)
+    kubectl -n lakehouse port-forward svc/minio 9000:9000 &
+    kubectl -n lakehouse port-forward svc/minio 9001:9001 &  # console
+    kubectl -n lakehouse port-forward svc/polaris 8181:8181 &
+    kubectl -n lakehouse port-forward svc/trino 8080:8080 &
+
+    # Confirm Polaris is up
+    curl http://localhost:8181/api/management/v1/catalogs/quickstart_catalog
+
+    # Connect to Trino CLI (if installed) and try:
+    # SHOW CATALOGS; CREATE SCHEMA iceberg.demo;
+    # CREATE TABLE iceberg.demo.t (id bigint) WITH (format='PARQUET');
+
+    # Use DuckDB
+    # kubectl -n lakehouse exec -it deploy/duckdb -- sh -lc "duckdb /init/init.sql"
+
+

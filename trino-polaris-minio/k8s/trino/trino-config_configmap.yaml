@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: trino-config
+  namespace: lakehouse
+data:
+  node.properties: |
+    node.environment=production
+    node.id=trino-1
+    node.data-dir=/data/trino
+  jvm.config: |
+    -Xmx2G
+    -XX:+UseG1GC
+    -XX:G1HeapRegionSize=32M
+    -XX:+ExplicitGCInvokesConcurrent
+    -XX:+HeapDumpOnOutOfMemoryError
+    -XX:-OmitStackTraceInFastThrow
+  config.properties: |
+    coordinator=true
+    node-scheduler.include-coordinator=true
+    http-server.http.port=8080
+    discovery-server.enabled=true
+    discovery.uri=http://localhost:8080
+  catalog-iceberg.properties: |
+    connector.name=iceberg
+    iceberg.catalog.type=rest
+    iceberg.rest-catalog.uri=http://polaris.lakehouse.svc.cluster.local:8181/api/catalog
+    iceberg.rest-catalog.security=OAUTH2
+    # Demo only: using root credentials. In production, create a dedicated principal and use that.
+    iceberg.rest-catalog.oauth2.credential=root:s3cr3t
+    iceberg.rest-catalog.oauth2.server-uri=http://polaris.lakehouse.svc.cluster.local:8181/api/catalog/v1/oauth/tokens
+    iceberg.rest-catalog.vended-credentials-enabled=true
+    fs.native-s3.enabled=true
+    s3.path-style-access=true
+    s3.endpoint=http://minio.lakehouse.svc.cluster.local:9000
+    s3.region=local
+
+

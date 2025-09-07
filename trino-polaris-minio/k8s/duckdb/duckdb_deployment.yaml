@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: duckdb
+  namespace: lakehouse
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: duckdb
+  template:
+    metadata:
+      labels:
+        app: duckdb
+    spec:
+      containers:
+        - name: duckdb
+          image: datacatering/duckdb:v1.3.2
+          # Start a long-running sleep so you can kubectl exec into the pod and run `duckdb`
+          command: ["/bin/sh","-c","sleep infinity"]
+          env:
+            - name: S3_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: duckdb-s3
+                  key: S3_ENDPOINT
+            - name: S3_REGION
+              valueFrom:
+                secretKeyRef:
+                  name: duckdb-s3
+                  key: S3_REGION
+            - name: S3_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: duckdb-s3
+                  key: S3_ACCESS_KEY_ID
+            - name: S3_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: duckdb-s3
+                  key: S3_SECRET_ACCESS_KEY
+          volumeMounts:
+            - name: duckdb-init
+              mountPath: /init
+      volumes:
+        - name: duckdb-init
+          configMap:
+            name: duckdb-init
+            items:
+              - key: init.sql
+                path: init.sql
+
+
