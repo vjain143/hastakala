@@ -1,0 +1,53 @@
+{
+  "catalogs": [
+    {
+      "user": "admin",
+      "catalog": "system|tpch|hive",
+      "allow": "all"
+    },
+    {
+      "group": "analyst",
+      "catalog": "hive",
+      "allow": "read-only"
+    },
+    {
+      "catalog": ".*",
+      "allow": "none"
+    }
+  ],
+  "schemas": [
+    {
+      "user": "admin",
+      "catalog": "hive",
+      "schema": ".*",
+      "owner": true
+    },
+    {
+      "group": "analyst",
+      "catalog": "hive",
+      "schema": "sales",
+      "owner": false
+    }
+  ],
+  "tables": [
+    {
+      "group": "analyst",
+      "catalog": "hive",
+      "schema": "sales",
+      "table": "orders",
+      "privileges": [
+        "SELECT",
+        "CREATE_VIEW"
+      ]
+    },
+    {
+      "user": "alice",
+      "catalog": "hive",
+      "schema": "default",
+      "table": ".*",
+      "privileges": [
+        "SELECT"
+      ]
+    }
+  ]
+}
